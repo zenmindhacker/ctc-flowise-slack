@@ -15,6 +15,7 @@ logger = logging.getLogger(__name__)
 SLACK_BOT_TOKEN = os.getenv("SLACK_BOT_TOKEN")
 FLOWISE_API_URL = os.getenv("FLOWISE_API_URL")
 FLOWISE_API_KEY = os.getenv("FLOWISE_API_KEY")
+SLACK_BOT_USER_ID = os.getenv("SLACK_BOT_USER_ID")
 
 
 @app.route("/slack/events", methods=["POST"])
@@ -50,7 +51,7 @@ def slack_events():
 def process_message(message, user_id):
     try:
         # Check if the message is from the bot itself
-        if user_id == "U07ECG91AG2":  # Replace 'U07ECG91AG2' with your bot's user ID
+        if user_id == SLACK_BOT_USER_ID:
             logger.info("Message is from the bot itself. Ignoring.")
             return None
 
