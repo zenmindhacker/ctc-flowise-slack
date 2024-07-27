@@ -62,7 +62,7 @@ def process_message(message, user_id):
         response_data = response.json()
         logger.info(f"Received response from Flowise API: {response_data}")
 
-        chatbot_response = response_data["data"]["output"]
+        chatbot_response = response_data["text"]  # Access the "text" field directly
         return chatbot_response
 
     except requests.exceptions.RequestException as e:
