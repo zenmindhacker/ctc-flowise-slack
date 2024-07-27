@@ -3,10 +3,12 @@ import requests
 from dotenv import load_dotenv
 import os
 import logging
+from celery import Celery
 
 load_dotenv()
 
 app = Flask(__name__)
+celery_app = Celery("tasks", broker=os.getenv("CELERY_BROKER_URL"))
 
 # Configure logging
 logging.basicConfig(level=logging.INFO)
@@ -38,22 +40,19 @@ def slack_events():
                 f"Received message from user {user_id} in channel {channel_id}: {text}"
             )
 
-            # Process the message and generate a response
-            response_text = process_message(text, user_id)
-
-            # Send the response back to Slack only if response_text is not None
-            if response_text:
-                send_message_to_slack(response_text, channel_id)
+            # Enqueue the event for asynchronous processing
+            process_message.delay(text, user_id, channel_id)
 
     return jsonify({"status": "success"}), 200
 
 
-def process_message(message, user_id):
+@celery_app.task
+def process_message(message, user_id, channel_id):
     try:
         # Check if the message is from the bot itself
         if user_id == SLACK_BOT_USER_ID:
             logger.info("Message is from the bot itself. Ignoring.")
-            return None
+            return
 
         headers = {"Authorization": f"Bearer {FLOWISE_API_KEY}"}
         payload = {
@@ -69,11 +68,13 @@ def process_message(message, user_id):
         logger.info(f"Received response from Flowise API: {response_data}")
 
         chatbot_response = response_data["text"]
-        return chatbot_response
+        send_message_to_slack(chatbot_response, channel_id)
 
     except requests.exceptions.RequestException as e:
         logger.error(f"Error occurred while processing message: {e}")
-        return "Oops! Something went wrong. Please try again later."
+        send_message_to_slack(
+            "Oops! Something went wrong. Please try again later.", channel_id
+        )
 
 
 def send_message_to_slack(message, channel_id):
