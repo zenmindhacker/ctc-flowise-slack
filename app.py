@@ -21,7 +21,6 @@ SLACK_BOT_USER_ID = os.getenv("SLACK_BOT_USER_ID")
 @app.route("/slack/events", methods=["POST"])
 def slack_events():
     slack_event = request.json
-    logger.info(f"Received Slack event: {slack_event}")
 
     if slack_event.get("type") == "url_verification":
         return jsonify({"challenge": slack_event.get("challenge")})
@@ -42,8 +41,9 @@ def slack_events():
             # Process the message and generate a response
             response_text = process_message(text, user_id)
 
-            # Send the response back to Slack
-            send_message_to_slack(response_text, channel_id)
+            # Send the response back to Slack only if response_text is not None
+            if response_text:
+                send_message_to_slack(response_text, channel_id)
 
     return jsonify({"status": "success"}), 200
 
