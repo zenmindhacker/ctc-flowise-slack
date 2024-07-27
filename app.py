@@ -49,6 +49,11 @@ def slack_events():
 
 def process_message(message, user_id):
     try:
+        # Check if the message is from the bot itself
+        if user_id == "U07ECG91AG2":  # Replace 'U07ECG91AG2' with your bot's user ID
+            logger.info("Message is from the bot itself. Ignoring.")
+            return None
+
         headers = {"Authorization": f"Bearer {FLOWISE_API_KEY}"}
         payload = {
             "question": message,
@@ -62,7 +67,7 @@ def process_message(message, user_id):
         response_data = response.json()
         logger.info(f"Received response from Flowise API: {response_data}")
 
-        chatbot_response = response_data["text"]  # Access the "text" field directly
+        chatbot_response = response_data["text"]
         return chatbot_response
 
     except requests.exceptions.RequestException as e:
