@@ -17,11 +17,15 @@ def slack_events():
     slack_event = request.json
 
     if slack_event["type"] == "app_mention" or slack_event["type"] == "message":
+        user_id = slack_event["event"]["user"]
         user_message = slack_event["event"]["text"]
         channel_id = slack_event["event"]["channel"]
 
+        # Generate a unique session ID for the user
+        session_id = f"slack_{user_id}"
+
         # Process the user's message and generate a response
-        response_text = process_message(user_message)
+        response_text = process_message(user_message, session_id)
 
         # Send the response back to Slack
         send_message_to_slack(response_text, channel_id)
@@ -29,12 +33,18 @@ def slack_events():
     return jsonify({"challenge": slack_event.get("challenge")}), 200
 
 
-def process_message(message):
+def process_message(message, session_id):
     headers = {"Authorization": f"Bearer {FLOWISE_API_KEY}"}
-    payload = {"text": message}
+    payload = {
+        "question": message,
+        "sessionId": session_id,
+        "memoryKey": "buffer_memory",
+    }
 
     response = requests.post(FLOWISE_API_URL, headers=headers, json=payload)
-    chatbot_response = response.json()["data"]["output"]
+    response_data = response.json()
+
+    chatbot_response = response_data["data"]["output"]
 
     return chatbot_response
 
