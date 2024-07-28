@@ -40,8 +40,14 @@ def slack_events():
                 f"Received message from user {user_id} in channel {channel_id}: {text}"
             )
 
-            # Enqueue the event for asynchronous processing
-            process_message.delay(text, user_id, channel_id)
+            try:
+                # Enqueue the event for asynchronous processing
+                process_message.delay(text, user_id, channel_id)
+            except Exception as e:
+                logger.error(f"Error occurred while enqueueing message: {e}")
+                send_message_to_slack(
+                    "Oops! Something went wrong. Please try again later.", channel_id
+                )
 
     return jsonify({"status": "success"}), 200
 
