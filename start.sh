@@ -4,4 +4,4 @@
 gunicorn app:app --bind 0.0.0.0:$PORT &
 
 # Start the Celery worker
-celery --app tasks worker --loglevel info --concurrency 4
+celery --app tasks.celery_app worker --loglevel info --concurrency 4
