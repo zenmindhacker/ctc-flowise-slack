@@ -29,15 +29,17 @@ def process_message(message, user_id, channel_id):
         session_key = f"{user_id}_{channel_id}"
 
         # Check if a session ID exists for the user and channel combination
-        if session_key in session_ids:
-            session_id = session_ids[session_key]
+        session_id = session_ids.get(session_key)
+        if session_id:
             logger.info(f"Using existing session ID: {session_id}")
         else:
-            session_id = None
             logger.info("No existing session ID found. Creating a new session.")
 
         headers = {"Authorization": f"Bearer {FLOWISE_API_KEY}"}
-        payload = {"question": message, "sessionId": session_id}
+        payload = {
+            "question": message,
+            "sessionId": session_id,
+        }
         logger.info(f"Sending request to Flowise API with payload: {payload}")
 
         response = requests.post(FLOWISE_API_URL, headers=headers, json=payload)
