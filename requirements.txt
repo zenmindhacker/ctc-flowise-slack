@@ -17,5 +17,4 @@ gunicorn
 flask
 requests
 python-dotenv
-celery
-redis
+flask_rq2

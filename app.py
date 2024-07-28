@@ -3,15 +3,13 @@ import requests
 from dotenv import load_dotenv
 import os
 import logging
-import redis
-from celery import Celery
+from flask_rq2 import RQ
 
 load_dotenv()
 
 app = Flask(__name__)
-celery_app = Celery(
-    "tasks", broker=os.getenv("CELERY_BROKER_URL").replace("rediss://", "redis://")
-)
+app.config["RQ_REDIS_URL"] = os.getenv("REDIS_URL")
+rq = RQ(app)
 
 # Configure logging
 logging.basicConfig(level=logging.INFO)
@@ -45,11 +43,11 @@ def slack_events():
             )
 
             try:
-                # Enqueue the event for asynchronous processing
-                task = process_message.delay(text, user_id, channel_id)
-                logger.info(f"Enqueued task: {task}")
+                # Enqueue the message processing job
+                rq.get_queue().enqueue(process_message, text, user_id, channel_id)
+                logger.info(f"Enqueued message processing job")
             except Exception as e:
-                logger.error(f"Error occurred while enqueueing message: {e}")
+                logger.error(f"Error occurred while enqueueing job: {e}")
                 send_message_to_slack(
                     "Oops! Something went wrong. Please try again later.", channel_id
                 )
@@ -57,7 +55,7 @@ def slack_events():
     return jsonify({"status": "success"}), 200
 
 
-@celery_app.task
+@rq.job
 def process_message(message, user_id, channel_id):
     try:
         # Check if the message is from the bot itself
