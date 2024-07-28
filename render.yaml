@@ -1,11 +1,11 @@
 services:
   - type: web
-    name: ctc-flowise-slack
+    name: ctc-flowise-service
     region: ohio
     plan: starter
     runtime: python
     buildCommand: "pip install -r requirements.txt"
-    startCommand: "supervisord -c supervisord.conf"
+    startCommand: "bash start.sh"
     autoDeploy: false
     envVars:
       - key: CELERY_BROKER_URL
