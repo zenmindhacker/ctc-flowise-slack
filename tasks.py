@@ -27,6 +27,8 @@ def process_message(message, user_id, channel_id):
 
         # Generate a unique key for the user and channel combination
         session_key = f"{user_id}_{channel_id}"
+        session_id = session_ids.get(session_key)
+        logger.info(f"Session Key: {session_key}, Session ID: {session_id}")
 
         # Check if a session ID exists for the user and channel combination
         session_id = session_ids.get(session_key)
@@ -46,12 +48,14 @@ def process_message(message, user_id, channel_id):
         response.raise_for_status()  # Raise an exception for 4xx or 5xx status codes
         response_data = response.json()
         logger.info(f"Received response from Flowise API: {response_data}")
+        session_id = response_data.get("sessionId")
+        logger.info(f"Session ID from API response: {session_id}")
 
         # Extract the session ID from the API response
         session_id = response_data.get("sessionId")
         if session_id:
             session_ids[session_key] = session_id
-            logger.info(f"Extracted session ID: {session_id}")
+            logger.info(f"Updated session_ids: {session_ids}")
         else:
             logger.warning("Session ID not found in the API response")
 
