@@ -3,12 +3,15 @@ import requests
 from dotenv import load_dotenv
 import os
 import logging
+import redis
 from celery import Celery
 
 load_dotenv()
 
 app = Flask(__name__)
-celery_app = Celery("tasks", broker=os.getenv("CELERY_BROKER_URL"))
+celery_app = Celery(
+    "tasks", broker=os.getenv("CELERY_BROKER_URL").replace("rediss://", "redis://")
+)
 
 # Configure logging
 logging.basicConfig(level=logging.INFO)
