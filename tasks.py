@@ -14,8 +14,6 @@ FLOWISE_API_KEY = os.getenv("FLOWISE_API_KEY")
 SLACK_BOT_TOKEN = os.getenv("SLACK_BOT_TOKEN")
 SLACK_BOT_USER_ID = os.getenv("SLACK_BOT_USER_ID")
 
-session_ids = {}  # Dictionary to store session IDs for each user and channel
-
 
 @celery_app.task(name="process_message")
 def process_message(message, user_id, channel_id):
@@ -25,39 +23,18 @@ def process_message(message, user_id, channel_id):
             logger.info("Message is from the bot itself. Ignoring.")
             return
 
-        # Generate a unique key for the user and channel combination
-        session_key = f"{user_id}_{channel_id}"
-        session_id = session_ids.get(session_key)
-        logger.info(f"Session Key: {session_key}, Session ID: {session_id}")
-
-        # Check if a session ID exists for the user and channel combination
-        session_id = session_ids.get(session_key)
-        if session_id:
-            logger.info(f"Using existing session ID: {session_id}")
-        else:
-            logger.info("No existing session ID found. Creating a new session.")
+        # Generate the session ID based on user ID and channel ID
+        session_id = f"{user_id}_{channel_id}"
+        logger.info(f"Using session ID: {session_id}")
 
         headers = {"Authorization": f"Bearer {FLOWISE_API_KEY}"}
-        payload = {
-            "question": message,
-            "sessionId": session_id,
-        }
+        payload = {"question": message, "overrideConfig": {"sessionId": session_id}}
         logger.info(f"Sending request to Flowise API with payload: {payload}")
 
         response = requests.post(FLOWISE_API_URL, headers=headers, json=payload)
         response.raise_for_status()  # Raise an exception for 4xx or 5xx status codes
         response_data = response.json()
         logger.info(f"Received response from Flowise API: {response_data}")
-        session_id = response_data.get("sessionId")
-        logger.info(f"Session ID from API response: {session_id}")
-
-        # Extract the session ID from the API response
-        session_id = response_data.get("sessionId")
-        if session_id:
-            session_ids[session_key] = session_id
-            logger.info(f"Updated session_ids: {session_ids}")
-        else:
-            logger.warning("Session ID not found in the API response")
 
         chatbot_response = response_data["text"]
         send_message_to_slack(chatbot_response, channel_id)
