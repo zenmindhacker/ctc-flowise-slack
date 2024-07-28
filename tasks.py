@@ -25,15 +25,19 @@ def process_message(message, user_id, channel_id):
             logger.info("Message is from the bot itself. Ignoring.")
             return
 
-        # Generate a unique session ID for the user and channel combination
-        session_id = f"slack_{user_id}_{channel_id}"
+        # Generate a unique key for the user and channel combination
+        session_key = f"{user_id}_{channel_id}"
+
+        # Check if a session ID exists for the user and channel combination
+        if session_key in session_ids:
+            session_id = session_ids[session_key]
+            logger.info(f"Using existing session ID: {session_id}")
+        else:
+            session_id = None
+            logger.info("No existing session ID found. Creating a new session.")
 
         headers = {"Authorization": f"Bearer {FLOWISE_API_KEY}"}
-        payload = {
-            "question": message,
-            "sessionId": session_id,
-            "memoryKey": "buffer_memory",
-        }
+        payload = {"question": message, "sessionId": session_id}
         logger.info(f"Sending request to Flowise API with payload: {payload}")
 
         response = requests.post(FLOWISE_API_URL, headers=headers, json=payload)
@@ -44,7 +48,7 @@ def process_message(message, user_id, channel_id):
         # Extract the session ID from the API response
         session_id = response_data.get("sessionId")
         if session_id:
-            session_ids[(user_id, channel_id)] = session_id
+            session_ids[session_key] = session_id
             logger.info(f"Extracted session ID: {session_id}")
         else:
             logger.warning("Session ID not found in the API response")
