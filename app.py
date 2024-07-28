@@ -26,6 +26,7 @@ SLACK_BOT_USER_ID = os.getenv("SLACK_BOT_USER_ID")
 @app.route("/slack/events", methods=["POST"])
 def slack_events():
     slack_event = request.json
+    logger.info(f"Received Slack event: {slack_event}")
 
     if slack_event.get("type") == "url_verification":
         return jsonify({"challenge": slack_event.get("challenge")})
@@ -45,7 +46,8 @@ def slack_events():
 
             try:
                 # Enqueue the event for asynchronous processing
-                process_message.delay(text, user_id, channel_id)
+                task = process_message.delay(text, user_id, channel_id)
+                logger.info(f"Enqueued task: {task}")
             except Exception as e:
                 logger.error(f"Error occurred while enqueueing message: {e}")
                 send_message_to_slack(
