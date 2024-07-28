@@ -1,6 +1,6 @@
 services:
   - type: web
-    name: ctc-flowise-service
+    name: ctc-flowise-slack
     region: ohio
     plan: starter
     runtime: python
