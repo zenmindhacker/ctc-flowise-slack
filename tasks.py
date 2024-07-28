@@ -24,7 +24,7 @@ def process_message(message, user_id, channel_id):
             return
 
         # Generate the session ID based on user ID and channel ID
-        session_id = f"{user_id}_{channel_id}"
+        session_id = f"{user_id}-{channel_id}"
         logger.info(f"Using session ID: {session_id}")
 
         headers = {"Authorization": f"Bearer {FLOWISE_API_KEY}"}
