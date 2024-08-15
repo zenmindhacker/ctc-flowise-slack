@@ -1,7 +1,7 @@
 services:
   - type: web
     name: ctc-flowise-slack
-    region: ohio
+    region: oregon
     plan: starter
     runtime: python
     buildCommand: "pip install -r requirements.txt"
@@ -15,7 +15,7 @@ services:
           property: connectionString
   - type: web
     name: ctc-celery-flower
-    region: ohio
+    region: oregon
     plan: free
     runtime: python
     buildCommand: "pip install -r requirements.txt"
@@ -29,7 +29,7 @@ services:
           property: connectionString
   - type: redis
     name: ctc-celery-redis
-    region: ohio
+    region: oregon
     plan: free
     maxmemoryPolicy: noeviction # recommended policy for queues
     ipAllowList: [] # only allow internal connections
